@@ -1,4 +1,4 @@
-import { Brain, LayoutDashboard, Mail, PlusCircle, Workflow } from 'lucide-react';
+import { Brain, LayoutDashboard, Mail, PlusCircle, Search, Workflow } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 import AIFloatingButton from '../ai/AIFloatingButton';
 
@@ -7,6 +7,7 @@ const navItems = [
   { to: '/pipeline', label: 'Pipeline', icon: Workflow },
   { to: '/candidates/new', label: 'Add Doctor', icon: PlusCircle },
   { to: '/email', label: 'Email Hub', icon: Mail },
+  { to: '/outreach', label: 'Find Doctors', icon: Search },
   { to: '/ai', label: 'AI Assistant', icon: Brain },
 ];
 
@@ -48,7 +49,7 @@ export default function AppLayout() {
       <AIFloatingButton />
 
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white px-2 py-2 md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
+        <div className="mx-auto grid max-w-md grid-cols-6 gap-1">
           {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}

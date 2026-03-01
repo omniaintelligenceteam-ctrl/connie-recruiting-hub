@@ -10,14 +10,20 @@ import {
 
 type ToastType = 'success' | 'error' | 'info';
 
+type ToastAction = {
+  label: string;
+  onClick: () => void;
+};
+
 type ToastItem = {
   id: string;
   message: string;
   type: ToastType;
+  action?: ToastAction;
 };
 
 type ToastContextType = {
-  showToast: (message: string, type?: ToastType) => void;
+  showToast: (message: string, type?: ToastType, action?: ToastAction) => void;
 };
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -41,12 +47,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }, []);
 
-  const showToast = useCallback((message: string, type: ToastType = 'info') => {
+  const showToast = useCallback((message: string, type: ToastType = 'info', action?: ToastAction) => {
     const id = crypto.randomUUID();
-    setToasts((current) => [...current, { id, message, type }]);
+    setToasts((current) => [...current, { id, message, type, action }]);
     window.setTimeout(() => {
       removeToast(id);
-    }, 3000);
+    }, 4000);
   }, [removeToast]);
 
   const value = useMemo(() => ({ showToast }), [showToast]);
@@ -60,18 +66,32 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           return (
             <div
               key={toast.id}
-              className={`pointer-events-auto flex items-center gap-3 rounded-lg border p-3 text-base shadow-md ${toastStyles[toast.type]}`}
+              className={`pointer-events-auto rounded-lg border p-3 text-base shadow-md ${toastStyles[toast.type]}`}
             >
-              <Icon size={20} />
-              <p className="flex-1">{toast.message}</p>
-              <button
-                type="button"
-                onClick={() => removeToast(toast.id)}
-                className="rounded p-1 opacity-70 hover:opacity-100"
-                aria-label="Dismiss"
-              >
-                <X size={16} />
-              </button>
+              <div className="flex items-center gap-3">
+                <Icon size={20} />
+                <p className="flex-1">{toast.message}</p>
+                <button
+                  type="button"
+                  onClick={() => removeToast(toast.id)}
+                  className="rounded p-1 opacity-70 hover:opacity-100"
+                  aria-label="Dismiss"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              {toast.action ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast.action?.onClick();
+                    removeToast(toast.id);
+                  }}
+                  className="mt-2 min-h-9 rounded-md border border-current px-3 text-sm font-semibold"
+                >
+                  {toast.action.label}
+                </button>
+              ) : null}
             </div>
           );
         })}

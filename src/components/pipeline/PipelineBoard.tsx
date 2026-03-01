@@ -119,7 +119,10 @@ export default function PipelineBoard() {
       if (pendingMove.targetStage === 'Contacted') {
         showToast('Want to draft an outreach email? Open /email', 'info');
       } else if (pendingMove.targetStage === 'Site Visit') {
-        showToast('Send site visit invitation?', 'info');
+        showToast('Want to plan the site visit?', 'info', {
+          label: 'Plan Site Visit',
+          onClick: () => navigate(`/candidates/${pendingMove.candidate.id}/site-visit`),
+        });
       } else if (pendingMove.targetStage === 'Offer') {
         showToast('Check compensation benchmarks?', 'info');
       }

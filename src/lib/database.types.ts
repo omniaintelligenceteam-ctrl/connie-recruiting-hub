@@ -39,7 +39,44 @@ export type EmailDraft = {
   created_at: string;
 };
 
+export interface ScheduleItem {
+  id: string;
+  time: string;
+  activity: string;
+  location: string;
+  attendees: string;
+}
+
+export interface NotifyPerson {
+  id: string;
+  name: string;
+  role: string;
+  notified: boolean;
+  notified_at?: string | null;
+}
+
+export type SiteVisit = {
+  id: string;
+  candidate_id: string | null;
+  visit_date: string | null;
+  visit_end_date: string | null;
+  status: 'planning' | 'confirmed' | 'completed' | 'cancelled';
+  flight_booked: boolean;
+  hotel_booked: boolean;
+  rental_car: boolean;
+  travel_notes: string | null;
+  schedule: ScheduleItem[];
+  notify_list: NotifyPerson[];
+  visit_rating: 'hot' | 'warm' | 'lukewarm' | 'not_a_fit' | null;
+  visit_notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type InsertCandidate = Omit<Candidate, 'id' | 'created_at' | 'updated_at'>;
 export type UpdateCandidate = Partial<InsertCandidate>;
 
 export type InsertInteraction = Omit<Interaction, 'id' | 'created_at'>;
+
+export type InsertSiteVisit = Omit<SiteVisit, 'id' | 'created_at' | 'updated_at'>;
+export type UpdateSiteVisit = Partial<InsertSiteVisit>;

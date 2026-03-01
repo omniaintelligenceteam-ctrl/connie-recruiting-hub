@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
-import { ArrowLeft, Mail, MapPin, Phone } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, Mail, MapPin, Phone } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCandidates } from '../../hooks/useCandidates';
 import { STAGE_COLORS, STAGES, SPECIALTY_COLORS } from '../../lib/constants';
@@ -281,6 +281,12 @@ export default function CandidateProfile({ candidateId }: CandidateProfileProps)
           >
             📧 Send Email
           </Link>
+          <Link
+            to={`/candidates/${candidate.id}/prep`}
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-base font-medium text-slate-700"
+          >
+            <FileText size={16} /> 📋 Prep Sheet
+          </Link>
           <button
             type="button"
             onClick={() => {
@@ -303,9 +309,10 @@ export default function CandidateProfile({ candidateId }: CandidateProfileProps)
           </button>
           <button
             type="button"
-            className="min-h-11 rounded-lg border border-slate-300 px-4 py-2 text-base font-medium text-slate-700"
+            onClick={() => navigate(`/candidates/${candidate.id}/site-visit`)}
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-base font-medium text-slate-700"
           >
-            📅 Schedule Visit
+            <Calendar size={16} /> Plan Visit
           </button>
           <button
             type="button"
