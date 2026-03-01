@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Candidate, InsertCandidate, UpdateCandidate } from '../lib/database.types';
 
@@ -22,6 +22,12 @@ export function useCandidates() {
     setCandidates((data ?? []) as Candidate[]);
     return (data ?? []) as Candidate[];
   }, []);
+
+  useEffect(() => {
+    fetchCandidates().catch(() => {
+      setCandidates([]);
+    });
+  }, [fetchCandidates]);
 
   const addCandidate = useCallback(
     async (data: InsertCandidate) => {

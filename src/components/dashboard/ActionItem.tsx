@@ -18,8 +18,10 @@ const urgencyStyles = {
 
 export default function ActionItem({ candidate, actionLabel, urgency, onAction }: ActionItemProps) {
   return (
-    <div
-      className={`rounded-xl border border-slate-200 border-l-4 p-4 shadow-sm ${urgencyStyles[urgency]}`}
+    <button
+      type="button"
+      onClick={() => onAction(candidate)}
+      className={`w-full rounded-xl border border-slate-200 border-l-4 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${urgencyStyles[urgency]}`}
     >
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="space-y-2">
@@ -34,15 +36,12 @@ export default function ActionItem({ candidate, actionLabel, urgency, onAction }
           </div>
           <p className="text-base text-slate-600">{actionLabel}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => onAction(candidate)}
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-base font-semibold text-white hover:bg-blue-700"
-        >
+
+        <span className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-base font-semibold text-white">
           Open
           <ArrowRight size={18} />
-        </button>
+        </span>
       </div>
-    </div>
+    </button>
   );
 }

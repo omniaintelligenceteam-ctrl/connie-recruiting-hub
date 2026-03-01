@@ -4,6 +4,7 @@ export const SPECIALTIES = [
   'Neurology',
   'OB/GYN',
   'Cardiothoracic Surgery',
+  'Other',
 ] as const;
 
 export const STAGES = [

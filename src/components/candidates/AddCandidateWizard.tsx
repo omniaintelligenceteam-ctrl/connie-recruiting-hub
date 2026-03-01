@@ -8,7 +8,8 @@ import { useToast } from '../shared/Toast';
 type FormState = {
   firstName: string;
   lastName: string;
-  specialty: InsertCandidate['specialty'] | '';
+  specialty: string;
+  customSpecialty: string;
   email: string;
   phone: string;
   currentLocation: string;
@@ -30,6 +31,7 @@ export default function AddCandidateWizard() {
     firstName: '',
     lastName: '',
     specialty: '',
+    customSpecialty: '',
     email: '',
     phone: '',
     currentLocation: '',
@@ -40,20 +42,22 @@ export default function AddCandidateWizard() {
     notes: '',
   });
 
+  const specialtyValue = form.specialty === 'Other' ? form.customSpecialty.trim() : form.specialty;
+
   const canContinueStep1 = useMemo(
-    () => Boolean(form.firstName.trim() && form.lastName.trim() && form.specialty),
-    [form.firstName, form.lastName, form.specialty],
+    () => Boolean(form.firstName.trim() && form.lastName.trim() && specialtyValue),
+    [form.firstName, form.lastName, specialtyValue],
   );
 
   const progressPercent = (step / 3) * 100;
 
   const handleSubmit = async () => {
-    if (!form.specialty) return;
+    if (!specialtyValue) return;
 
     const payload: InsertCandidate = {
       first_name: form.firstName.trim(),
       last_name: form.lastName.trim(),
-      specialty: form.specialty,
+      specialty: specialtyValue,
       stage: 'Sourced',
       email: form.email.trim() || null,
       phone: form.phone.trim() || null,
@@ -125,6 +129,18 @@ export default function AddCandidateWizard() {
                 </button>
               ))}
             </div>
+
+            {form.specialty === 'Other' ? (
+              <label className="block space-y-2 text-base font-medium text-slate-700">
+                Enter Specialty *
+                <input
+                  value={form.customSpecialty}
+                  onChange={(event) => setForm((prev) => ({ ...prev, customSpecialty: event.target.value }))}
+                  className="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-base"
+                  placeholder="e.g. Family Medicine"
+                />
+              </label>
+            ) : null}
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

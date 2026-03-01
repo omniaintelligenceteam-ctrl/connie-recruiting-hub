@@ -2,7 +2,7 @@ export type Candidate = {
   id: string;
   first_name: string;
   last_name: string;
-  specialty: 'Hematology/Oncology' | 'Gastroenterology' | 'Neurology' | 'OB/GYN' | 'Cardiothoracic Surgery';
+  specialty: string;
   stage: 'Sourced' | 'Contacted' | 'Responded' | 'Phone Screen' | 'Site Visit' | 'Offer' | 'Negotiation' | 'Accepted' | 'Closed/Lost';
   email: string | null;
   phone: string | null;

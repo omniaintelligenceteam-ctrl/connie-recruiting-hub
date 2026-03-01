@@ -2,7 +2,7 @@ CREATE TABLE candidates (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
-  specialty TEXT NOT NULL CHECK (specialty IN ('Hematology/Oncology', 'Gastroenterology', 'Neurology', 'OB/GYN', 'Cardiothoracic Surgery')),
+  specialty TEXT NOT NULL,
   stage TEXT NOT NULL DEFAULT 'Sourced' CHECK (stage IN ('Sourced', 'Contacted', 'Responded', 'Phone Screen', 'Site Visit', 'Offer', 'Negotiation', 'Accepted', 'Closed/Lost')),
   email TEXT,
   phone TEXT,
