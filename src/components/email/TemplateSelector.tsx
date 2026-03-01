@@ -1,3 +1,4 @@
+import { Check } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { EMAIL_TEMPLATES } from '../../lib/constants';
 
@@ -43,14 +44,19 @@ export default function TemplateSelector({ onSelect }: TemplateSelectorProps) {
                   body: template.body,
                 });
               }}
-              className={`min-h-28 rounded-xl border p-4 text-left shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+              className={`relative min-h-28 rounded-xl border-2 p-4 text-left shadow-sm transition ${
                 isSelected
-                  ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-200'
-                  : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50'
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-transparent bg-white hover:shadow-md'
               }`}
             >
+              {isSelected ? (
+                <span className="absolute top-2 right-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white">
+                  <Check size={14} />
+                </span>
+              ) : null}
               <p className="text-base font-semibold text-slate-900">{template.name}</p>
-              <p className="mt-2 text-base text-slate-600">{getSubjectPreview(template.subject)}</p>
+              <p className="mt-2 text-sm text-slate-500">{getSubjectPreview(template.subject)}</p>
             </button>
           );
         })}

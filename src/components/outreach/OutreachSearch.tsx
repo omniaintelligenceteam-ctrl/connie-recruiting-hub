@@ -67,7 +67,7 @@ const quickSearches: QuickSearch[] = [
 export default function OutreachSearch() {
   const { addCandidate } = useCandidates();
   const { showToast } = useToast();
-  const { searchResults, loading, error, search, clearResults } = useOutreachSearch();
+  const { searchResults, rawResponse, isSampleMode, loading, error, search, clearResults } = useOutreachSearch();
 
   const [specialty, setSpecialty] = useState<string>('');
   const [location, setLocation] = useState('');
@@ -270,11 +270,22 @@ export default function OutreachSearch() {
           <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>
         )}
 
+        {!loading && hasSearched && isSampleMode && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800">Connect AI to get real search results</div>
+        )}
+
         {!loading && hasSearched && searchMessage && (
           <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-blue-700">{searchMessage}</div>
         )}
 
-        {!loading && hasSearched && !error && searchResults.length === 0 && (
+        {!loading && hasSearched && !error && searchResults.length === 0 && rawResponse && (
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="mb-2 text-sm font-semibold text-slate-900">AI Response</p>
+            <pre className="whitespace-pre-wrap text-sm text-slate-700">{rawResponse}</pre>
+          </div>
+        )}
+
+        {!loading && hasSearched && !error && searchResults.length === 0 && !rawResponse && (
           <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-slate-600 shadow-sm">
             No matches found yet. Try broadening your location or requirements.
           </div>

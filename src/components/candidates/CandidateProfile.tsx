@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { format } from 'date-fns';
-import { ArrowLeft, Calendar, FileText, Mail, MapPin, Phone } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { format, isBefore, isToday } from 'date-fns';
+import {
+  ArrowLeft,
+  Calendar,
+  FileText,
+  Mail,
+  MapPin,
+  Phone,
+  StickyNote,
+  UserRoundCheck,
+} from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCandidates } from '../../hooks/useCandidates';
 import { STAGE_COLORS, STAGES, SPECIALTY_COLORS } from '../../lib/constants';
 import type { Candidate, Interaction } from '../../lib/database.types';
@@ -10,13 +19,34 @@ import ConfirmDialog from '../shared/ConfirmDialog';
 import { useToast } from '../shared/Toast';
 import CandidateTimeline from './CandidateTimeline';
 import LogInteraction from './LogInteraction';
+import QuickFollowUp from './QuickFollowUp';
+import VoiceNote from './VoiceNote';
 
 type CandidateProfileProps = {
   candidateId: string;
 };
 
+function getUrgency(nextStepDue: string | null) {
+  if (!nextStepDue) return 'border-l-green-500';
+  const due = new Date(nextStepDue);
+  const now = new Date();
+  if (isBefore(due, now) && !isToday(due)) return 'border-l-red-500';
+  if (isToday(due)) return 'border-l-yellow-400';
+  return 'border-l-green-500';
+}
+
+const actionCards = [
+  { key: 'email', label: 'Send Email', icon: Mail, tone: 'text-blue-600 bg-blue-50' },
+  { key: 'prep', label: 'Prep Sheet', icon: FileText, tone: 'text-violet-600 bg-violet-50' },
+  { key: 'call', label: 'Log Call', icon: Phone, tone: 'text-emerald-600 bg-emerald-50' },
+  { key: 'note', label: 'Add Note', icon: StickyNote, tone: 'text-amber-600 bg-amber-50' },
+  { key: 'visit', label: 'Plan Visit', icon: Calendar, tone: 'text-cyan-600 bg-cyan-50' },
+  { key: 'offer', label: 'Send Offer', icon: UserRoundCheck, tone: 'text-pink-600 bg-pink-50' },
+] as const;
+
 export default function CandidateProfile({ candidateId }: CandidateProfileProps) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { showToast } = useToast();
   const { getCandidateById, updateCandidate, deleteCandidate, loading } = useCandidates();
 
@@ -110,80 +140,84 @@ export default function CandidateProfile({ candidateId }: CandidateProfileProps)
     return <p className="text-base text-slate-600">Loading candidate profile...</p>;
   }
 
+  const pillClass = 'inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-sm text-white/90';
+
   return (
     <section className="space-y-6">
       <Link to="/pipeline" className="inline-flex min-h-11 items-center gap-2 text-base font-medium text-blue-700">
         <ArrowLeft size={18} /> Back to Pipeline
       </Link>
 
-      <div className="rounded-2xl bg-white p-5 shadow-sm">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="rounded-2xl bg-gradient-to-r from-slate-800 to-slate-900 p-6 text-white shadow-lg">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">
+            <h1 className="text-2xl font-bold">
               Dr. {candidate.first_name} {candidate.last_name}
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <Badge label={candidate.specialty} colorClass={SPECIALTY_COLORS[candidate.specialty]} />
-              <Badge label={candidate.stage} colorClass={STAGE_COLORS[candidate.stage]} />
+              <Badge label={candidate.specialty} colorClass={`${SPECIALTY_COLORS[candidate.specialty]} text-xs`} />
+              <Badge label={candidate.stage} variant="stage" colorClass={`${STAGE_COLORS[candidate.stage]} text-xs`} />
             </div>
           </div>
-
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setEditMode((prev) => !prev)}
-              className="min-h-11 rounded-lg border border-slate-300 px-4 text-base font-medium text-slate-700"
+              className="rounded-lg border border-white/30 px-4 py-2 text-sm font-medium hover:bg-white/10"
             >
               {editMode ? 'Cancel Edit' : 'Edit'}
             </button>
             <button
               type="button"
               onClick={() => setConfirmDeleteOpen(true)}
-              className="min-h-11 rounded-lg bg-red-600 px-4 text-base font-semibold text-white"
+              className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
             >
               Delete
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-2 text-base text-slate-700 md:grid-cols-2">
-          <p className="inline-flex items-center gap-2">
-            <Phone size={16} />
-            {candidate.phone ? (
-              <a href={`tel:${candidate.phone}`} className="text-blue-700 underline">
-                {candidate.phone}
-              </a>
-            ) : (
-              'No phone set'
-            )}
-          </p>
-          <p className="inline-flex items-center gap-2">
-            <Mail size={16} />
-            {candidate.email ? (
-              <a href={`mailto:${candidate.email}`} className="text-blue-700 underline">
-                {candidate.email}
-              </a>
-            ) : (
-              'No email set'
-            )}
-          </p>
-          <p className="inline-flex items-center gap-2">
-            <MapPin size={16} /> {candidate.current_location ?? 'No location set'}
-          </p>
-          <p>🏥 {candidate.current_employer ?? 'No employer set'}</p>
-          <p>📋 Source: {candidate.source ?? 'Unknown'}</p>
+        <div className="flex flex-wrap gap-2">
+          <span className={pillClass}>
+            <Phone size={14} />
+            {candidate.phone ? <a href={`tel:${candidate.phone}`}>{candidate.phone}</a> : 'No phone set'}
+          </span>
+          <span className={pillClass}>
+            <Mail size={14} />
+            {candidate.email ? <a href={`mailto:${candidate.email}`}>{candidate.email}</a> : 'No email set'}
+          </span>
+          <span className={pillClass}>
+            <MapPin size={14} /> {candidate.current_location ?? 'No location set'}
+          </span>
         </div>
+      </div>
 
-        <div className="mt-4">
-          <label className="block space-y-2 text-base font-medium text-slate-700">
-            Stage
+      <div className={`rounded-xl border-l-4 bg-white p-4 shadow-sm ${getUrgency(candidate.next_step_due)}`}>
+        <p className="text-xs font-bold tracking-wide text-slate-500">NEXT STEP</p>
+        <p className="mt-1 text-lg font-semibold text-slate-900">{candidate.next_step ?? 'No next step set'}</p>
+        <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-slate-600">
+          <Calendar size={14} /> Due: {formattedDueDate}
+        </p>
+        <Link
+          to={`/email?candidate=${candidate.id}`}
+          className="mt-3 inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+        >
+          Do It Now
+        </Link>
+      </div>
+
+      <div className="rounded-xl bg-white p-4 shadow-sm">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-slate-900">Quick Actions</h2>
+          <label className="text-sm font-medium text-slate-700">
+            Stage:{' '}
             <select
               value={candidate.stage}
               onChange={(event) => {
                 setPendingStage(event.target.value as Candidate['stage']);
                 setConfirmStageOpen(true);
               }}
-              className="min-h-11 w-full max-w-sm rounded-lg border border-slate-300 px-3 text-base"
+              className="rounded-lg border border-slate-300 px-2 py-1"
             >
               {STAGES.map((stage) => (
                 <option key={stage} value={stage}>
@@ -194,53 +228,92 @@ export default function CandidateProfile({ candidateId }: CandidateProfileProps)
           </label>
         </div>
 
-        {editMode ? (
-          <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
+          {actionCards.map(({ key, label, icon: Icon, tone }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => {
+                if (key === 'email') navigate(`/email?candidate=${candidate.id}`);
+                if (key === 'prep') navigate(`/candidates/${candidate.id}/prep`);
+                if (key === 'call') {
+                  setInitialInteractionType('Phone Call');
+                  setLogInteractionOpen(true);
+                }
+                if (key === 'note') {
+                  setInitialInteractionType('Note');
+                  setLogInteractionOpen(true);
+                }
+                if (key === 'visit') navigate(`/candidates/${candidate.id}/site-visit`);
+              }}
+              className="rounded-xl bg-white p-3 text-center shadow-sm transition hover:shadow-md"
+            >
+              <span className={`mx-auto mb-1 inline-flex rounded-lg p-2 ${tone}`}>
+                <Icon size={16} />
+              </span>
+              <span className="block text-xs font-medium text-slate-700">{label}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-start gap-2">
+          <QuickFollowUp candidate={candidate} />
+        </div>
+
+        <div className="mt-3">
+          <VoiceNote candidateId={candidateId} autoStart={searchParams.get('voiceNote') === '1'} />
+        </div>
+      </div>
+
+      {editMode ? (
+        <div className="rounded-xl bg-white p-4 shadow-sm">
+          <h3 className="mb-3 font-semibold text-slate-900">Edit Candidate</h3>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <input
-              className="min-h-11 rounded-lg border border-slate-300 px-3 text-base"
+              className="rounded-xl border border-slate-200 px-4 py-3"
               value={form.first_name ?? ''}
               onChange={(event) => setForm((prev) => ({ ...prev, first_name: event.target.value }))}
               placeholder="First name"
             />
             <input
-              className="min-h-11 rounded-lg border border-slate-300 px-3 text-base"
+              className="rounded-xl border border-slate-200 px-4 py-3"
               value={form.last_name ?? ''}
               onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))}
               placeholder="Last name"
             />
             <input
-              className="min-h-11 rounded-lg border border-slate-300 px-3 text-base"
+              className="rounded-xl border border-slate-200 px-4 py-3"
               value={form.phone ?? ''}
               onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
               placeholder="Phone"
             />
             <input
-              className="min-h-11 rounded-lg border border-slate-300 px-3 text-base"
+              className="rounded-xl border border-slate-200 px-4 py-3"
               value={form.email ?? ''}
               onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
               placeholder="Email"
             />
             <input
-              className="min-h-11 rounded-lg border border-slate-300 px-3 text-base"
+              className="rounded-xl border border-slate-200 px-4 py-3"
               value={form.current_location ?? ''}
               onChange={(event) => setForm((prev) => ({ ...prev, current_location: event.target.value }))}
               placeholder="Current location"
             />
             <input
-              className="min-h-11 rounded-lg border border-slate-300 px-3 text-base"
+              className="rounded-xl border border-slate-200 px-4 py-3"
               value={form.current_employer ?? ''}
               onChange={(event) => setForm((prev) => ({ ...prev, current_employer: event.target.value }))}
               placeholder="Current employer"
             />
             <input
-              className="min-h-11 rounded-lg border border-slate-300 px-3 text-base md:col-span-2"
+              className="rounded-xl border border-slate-200 px-4 py-3 md:col-span-2"
               value={form.next_step ?? ''}
               onChange={(event) => setForm((prev) => ({ ...prev, next_step: event.target.value }))}
               placeholder="Next step"
             />
             <input
               type="date"
-              className="min-h-11 rounded-lg border border-slate-300 px-3 text-base"
+              className="rounded-xl border border-slate-200 px-4 py-3"
               value={(form.next_step_due ?? '').split('T')[0]}
               onChange={(event) => setForm((prev) => ({ ...prev, next_step_due: event.target.value }))}
             />
@@ -251,77 +324,14 @@ export default function CandidateProfile({ candidateId }: CandidateProfileProps)
                   void handleSaveEdits();
                 }}
                 disabled={loading}
-                className="min-h-11 rounded-lg bg-green-600 px-4 text-base font-semibold text-white"
+                className="rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white"
               >
                 Save Changes
               </button>
             </div>
           </div>
-        ) : null}
-      </div>
-
-      <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-        <p className="text-sm font-bold tracking-wide text-blue-700">⚡ NEXT STEP</p>
-        <p className="mt-1 text-xl font-semibold text-slate-900">{candidate.next_step ?? 'No next step set'}</p>
-        <p className="mt-1 text-base text-slate-700">Due: {formattedDueDate}</p>
-        <Link
-          to={`/email?candidate=${candidate.id}`}
-          className="mt-3 inline-flex min-h-11 items-center rounded-lg bg-blue-600 px-4 text-base font-semibold text-white"
-        >
-          Do It Now
-        </Link>
-      </div>
-
-      <div className="rounded-2xl bg-white p-5 shadow-sm">
-        <h2 className="mb-3 text-xl font-bold text-slate-900">Quick Actions</h2>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            to={`/email?candidate=${candidate.id}`}
-            className="min-h-11 rounded-lg border border-slate-300 px-4 py-2 text-base font-medium text-slate-700"
-          >
-            📧 Send Email
-          </Link>
-          <Link
-            to={`/candidates/${candidate.id}/prep`}
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-base font-medium text-slate-700"
-          >
-            <FileText size={16} /> 📋 Prep Sheet
-          </Link>
-          <button
-            type="button"
-            onClick={() => {
-              setInitialInteractionType('Phone Call');
-              setLogInteractionOpen(true);
-            }}
-            className="min-h-11 rounded-lg border border-slate-300 px-4 py-2 text-base font-medium text-slate-700"
-          >
-            📞 Log Call
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setInitialInteractionType('Note');
-              setLogInteractionOpen(true);
-            }}
-            className="min-h-11 rounded-lg border border-slate-300 px-4 py-2 text-base font-medium text-slate-700"
-          >
-            📝 Add Note
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate(`/candidates/${candidate.id}/site-visit`)}
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-base font-medium text-slate-700"
-          >
-            <Calendar size={16} /> Plan Visit
-          </button>
-          <button
-            type="button"
-            className="min-h-11 rounded-lg border border-slate-300 px-4 py-2 text-base font-medium text-slate-700"
-          >
-            📄 Send Offer
-          </button>
         </div>
-      </div>
+      ) : null}
 
       <div className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-4 text-xl font-bold text-slate-900">Timeline</h2>

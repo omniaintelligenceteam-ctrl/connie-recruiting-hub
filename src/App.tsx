@@ -10,6 +10,7 @@ import OutreachPage from './pages/OutreachPage';
 import PipelinePage from './pages/PipelinePage';
 import InterviewPrepPage from './pages/InterviewPrepPage';
 import SiteVisitPage from './pages/SiteVisitPage';
+import SettingsPage from './pages/SettingsPage';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             <Route path="email" element={<EmailHubPage />} />
             <Route path="outreach" element={<OutreachPage />} />
             <Route path="ai" element={<AIAssistantPage />} />
+            <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

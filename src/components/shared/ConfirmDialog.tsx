@@ -20,8 +20,8 @@ export default function ConfirmDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl [animation:modal-pop_0.2s_ease-out]">
         <h3 className="mb-2 text-xl font-bold text-slate-900">{title}</h3>
         <p className="mb-6 text-base text-slate-600">{message}</p>
         <div className="flex justify-end gap-3">

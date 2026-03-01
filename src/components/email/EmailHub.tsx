@@ -1,4 +1,6 @@
+import { Check, ClipboardCopy } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useCandidates } from '../../hooks/useCandidates';
 import { supabase } from '../../lib/supabase';
 import type { Candidate } from '../../lib/database.types';
@@ -13,6 +15,10 @@ type ComposedEmail = {
   body: string;
 };
 
+type EmailHubLocationState = {
+  candidateId?: string;
+};
+
 const blankEmailTemplate: TemplateData = {
   name: 'Blank Email',
   subject: '',
@@ -21,6 +27,8 @@ const blankEmailTemplate: TemplateData = {
 
 export default function EmailHub() {
   const { candidates, fetchCandidates } = useCandidates();
+  const location = useLocation();
+  const routeState = (location.state as EmailHubLocationState | null) ?? null;
   const { showToast } = useToast();
   const [selectedCandidateId, setSelectedCandidateId] = useState('');
   const [selectedTemplateKey, setSelectedTemplateKey] = useState<TemplateKey | 'blank' | null>(null);
@@ -28,12 +36,19 @@ export default function EmailHub() {
   const [draftEmail, setDraftEmail] = useState<ComposedEmail>({ to: '', subject: '', body: '' });
   const [showPreview, setShowPreview] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchCandidates().catch(() => {
       showToast('Could not load candidates.', 'error');
     });
   }, [fetchCandidates, showToast]);
+
+  useEffect(() => {
+    if (routeState?.candidateId) {
+      setSelectedCandidateId(routeState.candidateId);
+    }
+  }, [routeState?.candidateId]);
 
   const selectedCandidate = useMemo<Candidate | null>(
     () => candidates.find((candidate) => candidate.id === selectedCandidateId) ?? null,
@@ -52,6 +67,8 @@ export default function EmailHub() {
 
     try {
       await navigator.clipboard.writeText(fullText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
       showToast('Email copied to clipboard. Paste into Outlook.', 'success');
     } catch {
       showToast('Could not copy to clipboard.', 'error');
@@ -99,7 +116,7 @@ export default function EmailHub() {
         <select
           value={selectedCandidateId}
           onChange={(event) => setSelectedCandidateId(event.target.value)}
-          className="mt-3 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-base"
+          className="mt-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-base"
         >
           <option value="">Manual recipient (no candidate selected)</option>
           {candidates.map((candidate) => (
@@ -120,10 +137,10 @@ export default function EmailHub() {
               setSelectedTemplate(blankEmailTemplate);
               setShowPreview(false);
             }}
-            className={`min-h-11 rounded-lg border px-4 text-base font-semibold ${
+            className={`rounded-xl border-2 px-4 py-2 text-sm font-semibold ${
               selectedTemplateKey === 'blank'
-                ? 'border-blue-600 bg-blue-50 text-blue-700'
-                : 'border-slate-300 text-slate-700'
+                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                : 'border-slate-200 text-slate-700'
             }`}
           >
             Blank Email
@@ -168,15 +185,16 @@ export default function EmailHub() {
         <button
           type="button"
           onClick={handleCopyToClipboard}
-          className="min-h-12 rounded-lg bg-green-600 px-6 text-base font-bold text-white shadow-sm hover:bg-green-700"
+          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-8 py-3 text-lg font-semibold text-white"
         >
-          Copy to Clipboard
+          {copied ? <Check size={18} /> : <ClipboardCopy size={18} />}
+          {copied ? 'Copied!' : 'Copy to Clipboard'}
         </button>
         <button
           type="button"
           onClick={handleSaveDraft}
           disabled={savingDraft}
-          className="min-h-11 rounded-lg border border-slate-300 px-5 text-base font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-xl border border-slate-300 px-5 py-3 text-base font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {savingDraft ? 'Saving...' : 'Save as Draft'}
         </button>

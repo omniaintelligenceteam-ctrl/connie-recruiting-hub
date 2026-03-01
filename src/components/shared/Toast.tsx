@@ -29,9 +29,15 @@ type ToastContextType = {
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 const toastStyles: Record<ToastType, string> = {
-  success: 'border-green-200 bg-green-50 text-green-800',
-  error: 'border-red-200 bg-red-50 text-red-800',
-  info: 'border-blue-200 bg-blue-50 text-blue-800',
+  success: 'border-l-4 border-green-500 bg-white text-slate-800',
+  error: 'border-l-4 border-red-500 bg-white text-slate-800',
+  info: 'border-l-4 border-blue-500 bg-white text-slate-800',
+};
+
+const iconStyles: Record<ToastType, string> = {
+  success: 'text-green-600',
+  error: 'text-red-600',
+  info: 'text-blue-600',
 };
 
 const toastIcons = {
@@ -47,13 +53,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }, []);
 
-  const showToast = useCallback((message: string, type: ToastType = 'info', action?: ToastAction) => {
-    const id = crypto.randomUUID();
-    setToasts((current) => [...current, { id, message, type, action }]);
-    window.setTimeout(() => {
-      removeToast(id);
-    }, 4000);
-  }, [removeToast]);
+  const showToast = useCallback(
+    (message: string, type: ToastType = 'info', action?: ToastAction) => {
+      const id = crypto.randomUUID();
+      setToasts((current) => [...current, { id, message, type, action }]);
+      window.setTimeout(() => {
+        removeToast(id);
+      }, 4000);
+    },
+    [removeToast],
+  );
 
   const value = useMemo(() => ({ showToast }), [showToast]);
 
@@ -66,10 +75,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           return (
             <div
               key={toast.id}
-              className={`pointer-events-auto rounded-lg border p-3 text-base shadow-md ${toastStyles[toast.type]}`}
+              className={`pointer-events-auto rounded-xl p-3 text-base shadow-2xl [animation:toast-slide-in_0.25s_ease-out] ${toastStyles[toast.type]}`}
             >
               <div className="flex items-center gap-3">
-                <Icon size={20} />
+                <Icon size={20} className={iconStyles[toast.type]} />
                 <p className="flex-1">{toast.message}</p>
                 <button
                   type="button"
@@ -87,7 +96,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     toast.action?.onClick();
                     removeToast(toast.id);
                   }}
-                  className="mt-2 min-h-9 rounded-md border border-current px-3 text-sm font-semibold"
+                  className="mt-2 min-h-9 rounded-md border border-slate-200 px-3 text-sm font-semibold"
                 >
                   {toast.action.label}
                 </button>

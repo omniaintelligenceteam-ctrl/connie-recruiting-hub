@@ -1,4 +1,17 @@
 import { useMemo, useState } from 'react';
+import {
+  Baby,
+  Brain,
+  Check,
+  FlaskConical,
+  Heart,
+  Mail,
+  MoreHorizontal,
+  Search,
+  Stethoscope,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SOURCES, SPECIALTIES } from '../../lib/constants';
 import type { InsertCandidate } from '../../lib/database.types';
@@ -21,6 +34,27 @@ type FormState = {
 };
 
 const nextStepOptions = ['Send outreach email', 'Schedule call', 'Log a note', 'Other'];
+
+const specialtyIcons: Record<string, LucideIcon> = {
+  'Cardiothoracic Surgery': Heart,
+  'Hematology/Oncology': FlaskConical,
+  Gastroenterology: Stethoscope,
+  Neurology: Brain,
+  'OB/GYN': Baby,
+  Other: MoreHorizontal,
+};
+
+const sourceIcons: Record<string, LucideIcon> = {
+  Conference: Users,
+  Referral: Users,
+  'Job Board': Search,
+  'Cold Outreach': Mail,
+  'Recruiting Firm': Users,
+  Other: MoreHorizontal,
+};
+
+const inputClass =
+  'w-full rounded-xl border border-slate-200 px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none';
 
 export default function AddCandidateWizard() {
   const navigate = useNavigate();
@@ -73,7 +107,10 @@ export default function AddCandidateWizard() {
 
     try {
       const created = await addCandidate(payload);
-      showToast(`Dr. ${created.last_name} was added successfully.`, 'success');
+      showToast(`Dr. ${created.last_name} was added successfully.`, 'success', {
+        label: 'Add Voice Note',
+        onClick: () => navigate(`/candidates/${created.id}?voiceNote=1`),
+      });
       navigate(`/candidates/${created.id}`);
     } catch {
       showToast('Could not add doctor. Please try again.', 'error');
@@ -82,83 +119,109 @@ export default function AddCandidateWizard() {
 
   return (
     <section className="mx-auto w-full max-w-3xl space-y-6 rounded-2xl bg-white p-4 shadow-sm md:p-6">
-      <header className="space-y-2">
+      <header className="space-y-3">
         <h2 className="text-2xl font-bold text-slate-900">Add New Doctor</h2>
-        <p className="text-base text-slate-600">Step {step} of 3</p>
-        <div className="h-3 w-full overflow-hidden rounded-full bg-slate-200">
-          <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${progressPercent}%` }} />
+        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+          <div
+            className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          {[1, 2, 3].map((index) => (
+            <div
+              key={index}
+              className={`relative inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
+                index < step
+                  ? 'bg-blue-600 text-white'
+                  : index === step
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-200 text-slate-500'
+              }`}
+            >
+              {index < step ? <Check size={16} /> : index}
+              {index === step ? <span className="absolute -inset-1 animate-ping rounded-full bg-blue-300/60" /> : null}
+            </div>
+          ))}
         </div>
       </header>
 
       {step === 1 && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="space-y-2 text-base font-medium text-slate-700">
-              First Name *
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-slate-700">First Name *</span>
               <input
                 value={form.firstName}
                 onChange={(event) => setForm((prev) => ({ ...prev, firstName: event.target.value }))}
-                className="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-base"
+                className={inputClass}
               />
             </label>
-            <label className="space-y-2 text-base font-medium text-slate-700">
-              Last Name *
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-slate-700">Last Name *</span>
               <input
                 value={form.lastName}
                 onChange={(event) => setForm((prev) => ({ ...prev, lastName: event.target.value }))}
-                className="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-base"
+                className={inputClass}
               />
             </label>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-base font-medium text-slate-700">Specialty *</p>
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-              {SPECIALTIES.map((specialty) => (
-                <button
-                  key={specialty}
-                  type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, specialty }))}
-                  className={`min-h-11 rounded-lg border px-4 text-base font-medium transition ${
-                    form.specialty === specialty
-                      ? 'border-blue-600 bg-blue-50 text-blue-700'
-                      : 'border-slate-300 bg-white text-slate-700 hover:border-blue-300'
-                  }`}
-                >
-                  {specialty}
-                </button>
-              ))}
+          <div>
+            <p className="mb-2 text-sm font-medium text-slate-700">Specialty *</p>
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+              {SPECIALTIES.map((specialty) => {
+                const Icon = specialtyIcons[specialty] ?? Stethoscope;
+                const isSelected = form.specialty === specialty;
+                return (
+                  <button
+                    key={specialty}
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, specialty }))}
+                    className={`rounded-xl border-2 p-4 ${
+                      isSelected
+                        ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
+                        : 'border-slate-200 bg-white hover:border-blue-300'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center justify-center gap-2 text-center">
+                      <Icon size={18} className="text-blue-600" />
+                      <span className="text-sm font-medium text-slate-800">{specialty}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-
-            {form.specialty === 'Other' ? (
-              <label className="block space-y-2 text-base font-medium text-slate-700">
-                Enter Specialty *
-                <input
-                  value={form.customSpecialty}
-                  onChange={(event) => setForm((prev) => ({ ...prev, customSpecialty: event.target.value }))}
-                  className="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-base"
-                  placeholder="e.g. Family Medicine"
-                />
-              </label>
-            ) : null}
           </div>
 
+          {form.specialty === 'Other' ? (
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-slate-700">Enter Specialty *</span>
+              <input
+                value={form.customSpecialty}
+                onChange={(event) => setForm((prev) => ({ ...prev, customSpecialty: event.target.value }))}
+                className={inputClass}
+                placeholder="e.g. Family Medicine"
+              />
+            </label>
+          ) : null}
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="space-y-2 text-base font-medium text-slate-700">
-              Email
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-slate-700">Email</span>
               <input
                 type="email"
                 value={form.email}
                 onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-                className="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-base"
+                className={inputClass}
               />
             </label>
-            <label className="space-y-2 text-base font-medium text-slate-700">
-              Phone
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-slate-700">Phone</span>
               <input
                 value={form.phone}
                 onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
-                className="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-base"
+                className={inputClass}
               />
             </label>
           </div>
@@ -168,7 +231,7 @@ export default function AddCandidateWizard() {
               type="button"
               disabled={!canContinueStep1}
               onClick={() => setStep(2)}
-              className="min-h-11 rounded-lg bg-blue-600 px-6 text-base font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="rounded-xl bg-blue-600 px-6 py-3 text-base font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               Next
             </button>
@@ -179,45 +242,48 @@ export default function AddCandidateWizard() {
       {step === 2 && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="space-y-2 text-base font-medium text-slate-700">
-              Current Location
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-slate-700">Current Location</span>
               <input
                 value={form.currentLocation}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, currentLocation: event.target.value }))
-                }
-                className="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-base"
+                onChange={(event) => setForm((prev) => ({ ...prev, currentLocation: event.target.value }))}
+                className={inputClass}
               />
             </label>
-            <label className="space-y-2 text-base font-medium text-slate-700">
-              Current Employer
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-slate-700">Current Employer</span>
               <input
                 value={form.currentEmployer}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, currentEmployer: event.target.value }))
-                }
-                className="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-base"
+                onChange={(event) => setForm((prev) => ({ ...prev, currentEmployer: event.target.value }))}
+                className={inputClass}
               />
             </label>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-base font-medium text-slate-700">Source</p>
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-              {SOURCES.map((source) => (
-                <button
-                  key={source}
-                  type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, source }))}
-                  className={`min-h-11 rounded-lg border px-4 text-base font-medium transition ${
-                    form.source === source
-                      ? 'border-blue-600 bg-blue-50 text-blue-700'
-                      : 'border-slate-300 bg-white text-slate-700 hover:border-blue-300'
-                  }`}
-                >
-                  {source}
-                </button>
-              ))}
+          <div>
+            <p className="mb-2 text-sm font-medium text-slate-700">Source</p>
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+              {SOURCES.map((source) => {
+                const Icon = sourceIcons[source] ?? Search;
+                const isSelected = form.source === source;
+                return (
+                  <button
+                    key={source}
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, source }))}
+                    className={`rounded-xl border-2 p-4 ${
+                      isSelected
+                        ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
+                        : 'border-slate-200 bg-white hover:border-blue-300'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center justify-center gap-2 text-center">
+                      <Icon size={18} className="text-blue-600" />
+                      <span className="text-sm font-medium text-slate-800">{source}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -225,14 +291,14 @@ export default function AddCandidateWizard() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="min-h-11 rounded-lg border border-slate-300 px-6 text-base font-medium text-slate-700"
+              className="rounded-xl border border-slate-300 px-6 py-3 text-base font-medium text-slate-700"
             >
               Back
             </button>
             <button
               type="button"
               onClick={() => setStep(3)}
-              className="min-h-11 rounded-lg bg-blue-600 px-6 text-base font-semibold text-white"
+              className="rounded-xl bg-blue-600 px-6 py-3 text-base font-semibold text-white"
             >
               Next
             </button>
@@ -242,12 +308,12 @@ export default function AddCandidateWizard() {
 
       {step === 3 && (
         <div className="space-y-4">
-          <label className="space-y-2 text-base font-medium text-slate-700">
-            Next Step
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">Next Step</span>
             <select
               value={form.nextStep}
               onChange={(event) => setForm((prev) => ({ ...prev, nextStep: event.target.value }))}
-              className="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-base"
+              className={inputClass}
             >
               {nextStepOptions.map((option) => (
                 <option key={option} value={option}>
@@ -257,23 +323,23 @@ export default function AddCandidateWizard() {
             </select>
           </label>
 
-          <label className="space-y-2 text-base font-medium text-slate-700">
-            Next Step Due Date
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">Next Step Due Date</span>
             <input
               type="date"
               value={form.nextStepDue}
               onChange={(event) => setForm((prev) => ({ ...prev, nextStepDue: event.target.value }))}
-              className="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-base"
+              className={inputClass}
             />
           </label>
 
-          <label className="space-y-2 text-base font-medium text-slate-700">
-            Notes
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">Notes</span>
             <textarea
               rows={4}
               value={form.notes}
               onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-base"
+              className={inputClass}
             />
           </label>
 
@@ -281,7 +347,7 @@ export default function AddCandidateWizard() {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="min-h-11 rounded-lg border border-slate-300 px-6 text-base font-medium text-slate-700"
+              className="rounded-xl border border-slate-300 px-6 py-3 text-base font-medium text-slate-700"
             >
               Back
             </button>
@@ -289,7 +355,7 @@ export default function AddCandidateWizard() {
               type="button"
               onClick={handleSubmit}
               disabled={loading}
-              className="min-h-11 rounded-lg bg-green-600 px-6 text-base font-semibold text-white disabled:cursor-not-allowed disabled:bg-green-300"
+              className="rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 text-base font-semibold text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? 'Adding...' : 'Add Doctor'}
             </button>

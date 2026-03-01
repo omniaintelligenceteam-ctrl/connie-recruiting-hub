@@ -39,14 +39,12 @@ function SortableCandidateCard({ candidate, onClick }: SortableCandidateCardProp
       <button
         type="button"
         onClick={() => onClick(candidate)}
-        className="min-h-11 w-full rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        className="w-full cursor-grab rounded-xl bg-white p-3 text-left shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:cursor-grabbing"
       >
-        <div className="mb-1 flex items-center justify-between gap-2">
-          <p className="text-base font-bold text-slate-900">
-            Dr. {candidate.first_name} {candidate.last_name}
-          </p>
-        </div>
-        <p className="text-sm text-slate-600">{candidate.specialty}</p>
+        <p className="text-sm font-semibold text-slate-900">
+          Dr. {candidate.first_name} {candidate.last_name}
+        </p>
+        <p className="mt-1 text-xs text-slate-500">{candidate.specialty}</p>
       </button>
     </div>
   );
@@ -102,6 +100,46 @@ export default function PipelineBoard() {
     setPendingMove({ candidate, targetStage });
   };
 
+  const showStageSuggestion = (candidate: Candidate, targetStage: Candidate['stage']) => {
+    if (targetStage === 'Phone Screen') {
+      showToast('Great! Schedule a phone screen. Suggested: Send intro email first, then call in 2-3 days.', 'info');
+      return;
+    }
+
+    if (targetStage === 'Responded') {
+      showToast('Time for a formal interview. Would you like to generate an Interview Prep Sheet?', 'info', {
+        label: 'Generate Prep Sheet',
+        onClick: () => navigate(`/candidates/${candidate.id}/prep`),
+      });
+      return;
+    }
+
+    if (targetStage === 'Site Visit') {
+      showToast('Exciting! Ready to plan the site visit?', 'info', {
+        label: 'Plan Site Visit',
+        onClick: () => navigate(`/candidates/${candidate.id}/site-visit`),
+      });
+      return;
+    }
+
+    if (targetStage === 'Offer') {
+      showToast('Almost there! Draft an offer using the Email Hub?', 'info', {
+        label: 'Open Email Hub',
+        onClick: () => navigate('/email', { state: { candidateId: candidate.id } }),
+      });
+      return;
+    }
+
+    if (targetStage === 'Accepted') {
+      showToast(`🎉 Congratulations! ${candidate.first_name} is joining Baptist Health!`, 'success');
+      return;
+    }
+
+    if (targetStage === 'Closed/Lost') {
+      showToast('Sorry to hear. Would you like to note why they declined?', 'info');
+    }
+  };
+
   const handleConfirmMove = async () => {
     if (!pendingMove) return;
 
@@ -110,23 +148,15 @@ export default function PipelineBoard() {
       return;
     }
 
+    const move = pendingMove;
+
     try {
-      await updateCandidate(pendingMove.candidate.id, {
-        stage: pendingMove.targetStage,
-        lost_reason: pendingMove.targetStage === 'Closed/Lost' ? lostReason.trim() : null,
+      await updateCandidate(move.candidate.id, {
+        stage: move.targetStage,
+        lost_reason: move.targetStage === 'Closed/Lost' ? lostReason.trim() : null,
       });
 
-      if (pendingMove.targetStage === 'Contacted') {
-        showToast('Want to draft an outreach email? Open /email', 'info');
-      } else if (pendingMove.targetStage === 'Site Visit') {
-        showToast('Want to plan the site visit?', 'info', {
-          label: 'Plan Site Visit',
-          onClick: () => navigate(`/candidates/${pendingMove.candidate.id}/site-visit`),
-        });
-      } else if (pendingMove.targetStage === 'Offer') {
-        showToast('Check compensation benchmarks?', 'info');
-      }
-
+      showStageSuggestion(move.candidate, move.targetStage);
       setPendingMove(null);
       setLostReason('');
     } catch {
@@ -143,10 +173,10 @@ export default function PipelineBoard() {
     return (
       <div className="space-y-4">
         {STAGES.map((stage) => (
-          <section key={stage} className="rounded-xl bg-slate-100 p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-base font-semibold text-slate-800">{stage}</h3>
-              <span className="rounded-full bg-white px-2 py-1 text-sm font-semibold text-slate-700">
+          <section key={stage} className="rounded-xl bg-slate-100/80 p-3">
+            <div className="mb-2 flex items-center gap-2">
+              <h3 className="font-semibold text-slate-700">{stage}</h3>
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
                 {groupedCandidates[stage]?.length ?? 0}
               </span>
             </div>
