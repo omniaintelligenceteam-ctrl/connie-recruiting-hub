@@ -81,11 +81,11 @@ export default function CandidateCard({ candidate, onClick, interactions = [] }:
       <button
         type="button"
         onClick={() => onClick(candidate)}
-        className="min-h-11 w-full rounded-xl border border-slate-200 bg-white p-3 pr-12 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        className="min-h-11 w-full rounded-xl border border-slate-200 bg-white p-2.5 pr-11 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
       >
         {/* Name + urgency dot */}
-        <div className="mb-2 flex items-start justify-between gap-2">
-          <p className="text-base font-bold text-slate-900">
+        <div className="mb-1.5 flex items-start justify-between gap-2">
+          <p className="text-sm font-bold text-slate-900">
             Dr. {candidate.first_name} {candidate.last_name}
           </p>
           <span
@@ -94,7 +94,7 @@ export default function CandidateCard({ candidate, onClick, interactions = [] }:
         </div>
 
         {/* Specialty badge */}
-        <div className="mb-2">
+        <div className="mb-1.5">
           <Badge
             label={candidate.specialty}
             colorClass={SPECIALTY_COLORS[candidate.specialty] ?? 'bg-slate-100 text-slate-700'}
@@ -102,11 +102,11 @@ export default function CandidateCard({ candidate, onClick, interactions = [] }:
         </div>
 
         {/* Stage duration */}
-        <p className="text-sm text-slate-600">In stage: {daysInStage}</p>
+        <p className="text-xs text-slate-600">In stage: {daysInStage}</p>
 
         {/* Next step */}
         {candidate.next_step ? (
-          <p className="mt-1 text-sm text-slate-700">
+          <p className="mt-1 text-xs text-slate-700">
             <span className="font-medium">Next:</span> {candidate.next_step}
           </p>
         ) : null}

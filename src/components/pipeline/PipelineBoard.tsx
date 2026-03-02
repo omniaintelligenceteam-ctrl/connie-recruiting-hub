@@ -202,9 +202,9 @@ export default function PipelineBoard() {
   return (
     <>
       <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd} sensors={sensors}>
-        <div className="overflow-x-auto pb-2">
+        <div className="overflow-x-auto pb-2 scroll-smooth [scrollbar-gutter:stable]">
           <SortableContext items={[...STAGES]} strategy={horizontalListSortingStrategy}>
-            <div className="flex min-w-max gap-3">
+            <div className="flex min-w-max gap-2.5">
               {STAGES.map((stage) => (
                 <PipelineColumn
                   key={stage}

@@ -22,19 +22,19 @@ export default function PipelineColumn({ stage, candidates, onDrop, onCandidateC
           onDrop(id, stage);
         }
       }}
-      className={`w-full rounded-xl bg-slate-100 p-3 transition md:w-[220px] md:min-w-[220px] ${
+      className={`w-full rounded-xl bg-slate-100/90 p-2.5 transition md:w-[205px] md:min-w-[205px] ${
         isOver ? 'ring-2 ring-blue-300' : ''
       }`}
     >
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-slate-800">{stage}</h3>
-        <span className="inline-flex min-h-7 min-w-7 items-center justify-center rounded-full bg-white px-2 text-sm font-semibold text-slate-700">
+      <div className="sticky top-0 z-10 mb-2 flex items-center justify-between gap-2 rounded-lg bg-slate-100/95 py-1 backdrop-blur-sm">
+        <h3 className="text-sm font-semibold text-slate-800">{stage}</h3>
+        <span className="inline-flex min-h-6 min-w-6 items-center justify-center rounded-full bg-white px-1.5 text-xs font-semibold text-slate-700">
           {candidates.length}
         </span>
       </div>
 
       <SortableContext items={candidates.map((candidate) => candidate.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-3">
+        <div className="space-y-2">
           {candidates.map((candidate) => (
             <CandidateCard key={candidate.id} candidate={candidate} onClick={onCandidateClick} />
           ))}
