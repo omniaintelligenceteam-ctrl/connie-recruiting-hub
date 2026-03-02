@@ -23,6 +23,12 @@ import QuickFollowUp from './QuickFollowUp';
 import VoiceNote from './VoiceNote';
 import NextStepCard from './NextStepCard';
 import { useInteractions } from '../../hooks/useInteractions';
+import VisaSection from './sections/VisaSection';
+import PaperworkSection from './sections/PaperworkSection';
+import NPDBSection from './sections/NPDBSection';
+import ApprovalSection from './sections/ApprovalSection';
+import DocSection from './sections/DocSection';
+import ThankYouLettersSection from './sections/ThankYouLettersSection';
 import { recommendNextStep } from '../../lib/nextStepEngine';
 
 type CandidateProfileProps = {
@@ -417,6 +423,13 @@ export default function CandidateProfile({ candidateId }: CandidateProfileProps)
         <h2 className="mb-3 text-lg font-bold text-slate-900">Notes</h2>
         <p className="text-sm text-slate-700 whitespace-pre-wrap">{candidate.notes ?? 'No notes yet.'}</p>
       </div>
+
+      <VisaSection candidate={candidate} onUpdate={refreshCandidate} />
+      <PaperworkSection candidate={candidate} onUpdate={refreshCandidate} />
+      <NPDBSection candidate={candidate} onUpdate={refreshCandidate} />
+      <ApprovalSection candidate={candidate} />
+      <DocSection candidate={candidate} />
+      <ThankYouLettersSection candidateId={candidateId} />
 
       <div className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-4 text-xl font-bold text-slate-900">Timeline</h2>
