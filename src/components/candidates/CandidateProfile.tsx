@@ -102,7 +102,9 @@ export default function CandidateProfile({ candidateId }: CandidateProfileProps)
         phone: form.phone ?? null,
         current_location: form.current_location ?? null,
         current_employer: form.current_employer ?? null,
+        specialty: form.specialty ?? candidate.specialty,
         source: form.source ?? null,
+        notes: form.notes ?? null,
         next_step: form.next_step ?? null,
         next_step_due: form.next_step_due ?? null,
       });
@@ -209,6 +211,11 @@ export default function CandidateProfile({ candidateId }: CandidateProfileProps)
           <span className={pillClass}>
             <MapPin size={14} /> {candidate.current_location ?? 'No location set'}
           </span>
+          {candidate.source && (
+            <span className={pillClass}>
+              <UserRoundCheck size={14} /> {candidate.source}
+            </span>
+          )}
         </div>
       </div>
 
@@ -326,6 +333,18 @@ export default function CandidateProfile({ candidateId }: CandidateProfileProps)
               placeholder="Current employer"
             />
             <input
+              className="rounded-xl border border-slate-200 px-4 py-3"
+              value={form.specialty ?? ''}
+              onChange={(event) => setForm((prev) => ({ ...prev, specialty: event.target.value as Candidate['specialty'] }))}
+              placeholder="Specialty"
+            />
+            <input
+              className="rounded-xl border border-slate-200 px-4 py-3"
+              value={form.source ?? ''}
+              onChange={(event) => setForm((prev) => ({ ...prev, source: event.target.value as Candidate['source'] }))}
+              placeholder="How they found us"
+            />
+            <input
               className="rounded-xl border border-slate-200 px-4 py-3 md:col-span-2"
               value={form.next_step ?? ''}
               onChange={(event) => setForm((prev) => ({ ...prev, next_step: event.target.value }))}
@@ -336,6 +355,32 @@ export default function CandidateProfile({ candidateId }: CandidateProfileProps)
               className="rounded-xl border border-slate-200 px-4 py-3"
               value={(form.next_step_due ?? '').split('T')[0]}
               onChange={(event) => setForm((prev) => ({ ...prev, next_step_due: event.target.value }))}
+            />
+            <textarea
+              className="rounded-xl border border-slate-200 px-4 py-3 text-sm md:col-span-2"
+              value={form.notes ?? ''}
+              onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
+              rows={6}
+              placeholder="Notes about this candidate..."
+            />
+            <input
+              className="rounded-xl border border-slate-200 px-4 py-3"
+              value={form.specialty ?? ''}
+              onChange={(event) => setForm((prev) => ({ ...prev, specialty: event.target.value }))}
+              placeholder="Specialty"
+            />
+            <input
+              className="rounded-xl border border-slate-200 px-4 py-3"
+              value={form.source ?? ''}
+              onChange={(event) => setForm((prev) => ({ ...prev, source: event.target.value as Candidate['source'] }))}
+              placeholder="Source (how they connected)"
+            />
+            <textarea
+              className="rounded-xl border border-slate-200 px-4 py-3 md:col-span-2"
+              rows={6}
+              value={form.notes ?? ''}
+              onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
+              placeholder="Notes about this candidate..."
             />
             <div className="md:col-span-2">
               <button
@@ -352,6 +397,26 @@ export default function CandidateProfile({ candidateId }: CandidateProfileProps)
           </div>
         </div>
       ) : null}
+
+      <div className="rounded-xl bg-white p-4 shadow-sm">
+        <h2 className="mb-3 text-lg font-bold text-slate-900">Notes</h2>
+        {editMode ? (
+          <textarea
+            value={form.notes ?? ''}
+            onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
+            rows={6}
+            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+            placeholder="Notes about this candidate..."
+          />
+        ) : (
+          <p className="whitespace-pre-wrap text-sm text-slate-700">{candidate.notes ?? 'No notes yet.'}</p>
+        )}
+      </div>
+
+      <div className="rounded-xl bg-white p-4 shadow-sm">
+        <h2 className="mb-3 text-lg font-bold text-slate-900">Notes</h2>
+        <p className="text-sm text-slate-700 whitespace-pre-wrap">{candidate.notes ?? 'No notes yet.'}</p>
+      </div>
 
       <div className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-4 text-xl font-bold text-slate-900">Timeline</h2>
