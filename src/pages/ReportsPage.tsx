@@ -19,9 +19,35 @@ function formatDate(dateString?: string | null) {
   return date.toLocaleDateString('en-US');
 }
 
-function candidateLine(candidate: Candidate, details?: string) {
-  const noteText = details?.trim() ? details.trim() : (candidate.notes?.trim() || 'No notes provided');
-  return `- ${candidate.first_name} ${candidate.last_name} (${candidate.specialty}) — ${noteText}`;
+function shortNotes(notes?: string | null, limit = 150) {
+  const clean = (notes || '').replace(/\s+/g, ' ').trim();
+  if (!clean) return 'No notes provided.';
+  if (clean.length <= limit) return clean;
+  return `${clean.slice(0, limit).trimEnd()}...`;
+}
+
+function extractVisa(notes?: string | null) {
+  const text = notes || '';
+  if (/\bj-?1\b/i.test(text)) return 'J-1';
+  if (/\bh-?1b\b/i.test(text)) return 'H1B';
+  return '';
+}
+
+function extractYear(candidate: Candidate) {
+  const text = candidate.notes || '';
+  const match = text.match(/\b(20\d{2})\b/);
+  return match?.[1] || '';
+}
+
+function extractStartDate(candidate: Candidate) {
+  const text = candidate.notes || '';
+  const startMatch = text.match(/starts?\s+([^\.;\n]+)/i);
+  if (startMatch?.[1]) return startMatch[1].trim();
+  return formatDate(candidate.next_step_due);
+}
+
+function doctorName(candidate: Candidate) {
+  return `Dr. ${candidate.first_name} ${candidate.last_name}`;
 }
 
 function buildPipelineReport(candidates: Candidate[]) {
@@ -33,6 +59,7 @@ function buildPipelineReport(candidates: Candidate[]) {
   const offer = candidates.filter((c) => c.stage === 'Offer');
   const siteVisit = candidates.filter((c) => c.stage === 'Site Visit');
   const inProcess = candidates.filter((c) => c.stage === 'Phone Screen' || c.stage === 'Sourced');
+  const approved = candidates.filter((c) => /\bapproved\b/i.test(c.notes || ''));
 
   const recentSiteVisits = siteVisit.filter((c) => c.next_step_due && new Date(c.next_step_due) <= today);
   const upcomingSiteVisits = siteVisit.filter((c) => c.next_step_due && new Date(c.next_step_due) > today);
@@ -45,38 +72,92 @@ function buildPipelineReport(candidates: Candidate[]) {
     return acc;
   }, {});
 
-  const inProcessLines = Object.entries(groupedInProcess)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .flatMap(([specialty, group]) => [
-      `${specialty}:`,
-      ...group.map((candidate) => `- ${candidate.first_name} ${candidate.last_name} (${candidate.stage})${candidate.notes ? ` — ${candidate.notes}` : ''}`),
-      '',
-    ]);
+  const currentYear = now.getFullYear();
+
+  const hiredLines = accepted.map((candidate) => `${doctorName(candidate)}, ${candidate.specialty || 'Unknown specialty'}, starts ${extractStartDate(candidate)}.`);
+
+  const siteEventsLines = candidates
+    .filter((c) => c.next_step_due)
+    .sort((a, b) => new Date(a.next_step_due || '').getTime() - new Date(b.next_step_due || '').getTime())
+    .map((candidate) => `${formatDate(candidate.next_step_due)} - ${doctorName(candidate)}, ${candidate.specialty || 'Unknown specialty'}. ${shortNotes(candidate.notes)}`);
 
   const report = [
     `Physician Integration – Paducah Market ${reportDate}`,
     '',
     'Signed, yet to start:',
+    `${currentYear}`,
     ...(accepted.length
-      ? accepted.map((candidate) => `- ${candidate.first_name} ${candidate.last_name} (${candidate.specialty}) — Start Date: ${formatDate(candidate.next_step_due)}`)
-      : ['- None']),
+      ? accepted.map((candidate) => {
+          const visa = extractVisa(candidate.notes);
+          const visaPart = visa ? `, ${visa}` : '';
+          return `${doctorName(candidate)}, ${candidate.specialty || 'Unknown specialty'}${visaPart}, starts ${extractStartDate(candidate)}`;
+        })
+      : ['None']),
+    '',
+    'Reviewing PEA/contract:',
+    'None',
+    '',
+    'Accepted Terms/contract requested:',
+    'None',
     '',
     'Presented term sheet:',
-    ...(offer.length ? offer.map((candidate) => candidateLine(candidate)) : ['- None']),
+    ...(offer.length
+      ? offer.map((candidate) => {
+          const year = extractYear(candidate);
+          const yearPart = year ? `, ${year}` : '';
+          return `${doctorName(candidate)} – ${candidate.specialty || 'Unknown specialty'}${yearPart}, ${shortNotes(candidate.notes)}`;
+        })
+      : ['None']),
     '',
     'Recent site visits (in person and or zoom, no action taken yet):',
-    ...(recentSiteVisits.length ? recentSiteVisits.map((candidate) => candidateLine(candidate)) : ['- None']),
+    ...(recentSiteVisits.length
+      ? recentSiteVisits.map((candidate) => `${doctorName(candidate)}, ${candidate.specialty || 'Unknown specialty'}. SV ${formatDate(candidate.next_step_due)}. ${shortNotes(candidate.notes)}`)
+      : ['None']),
     '',
     'Upcoming Site Visits:',
     ...(upcomingSiteVisits.length
-      ? upcomingSiteVisits.map((candidate) => `- ${candidate.first_name} ${candidate.last_name} (${candidate.specialty}) — ${formatDate(candidate.next_step_due)}`)
-      : ['- None']),
+      ? upcomingSiteVisits.map((candidate) => {
+          const year = extractYear(candidate);
+          const yearPart = year ? `, ${year}` : '';
+          return `${doctorName(candidate)}, ${candidate.specialty || 'Unknown specialty'}${yearPart}. SV ${formatDate(candidate.next_step_due)}.`;
+        })
+      : ['None']),
     '',
     'Site visit to be scheduled:',
-    ...(siteVisitToSchedule.length ? siteVisitToSchedule.map((candidate) => candidateLine(candidate, 'No date set')) : ['- None']),
+    ...(siteVisitToSchedule.length
+      ? siteVisitToSchedule.map((candidate) => {
+          const year = extractYear(candidate);
+          const yearPart = year ? `${year}. ` : '';
+          return `${doctorName(candidate)}, ${yearPart}${shortNotes(candidate.notes)}`;
+        })
+      : ['None']),
     '',
     'Candidates in Process:',
-    ...(inProcessLines.length ? inProcessLines : ['- None']),
+    ...(Object.keys(groupedInProcess).length
+      ? Object.entries(groupedInProcess)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .flatMap(([specialty, group]) => [
+            specialty,
+            ...group.map((candidate) => {
+              const visa = extractVisa(candidate.notes);
+              const visaPart = visa ? `, ${visa}` : '';
+              const year = extractYear(candidate);
+              const yearPart = year ? `, ${year}` : '';
+              return `${doctorName(candidate)} – ${candidate.specialty || 'Unknown specialty'}${visaPart}${yearPart}. ${shortNotes(candidate.notes)}`;
+            }),
+            '',
+          ])
+      : ['None']),
+    `Approved Physician Positions as of APR dated ${reportDate}:`,
+    ...(approved.length
+      ? approved.map((candidate) => `${doctorName(candidate)}, ${candidate.specialty || 'Unknown specialty'}. ${shortNotes(candidate.notes)}`)
+      : ['None identified from notes.']),
+    '',
+    `Hired ${currentYear}-${currentYear + 1}:`,
+    ...(hiredLines.length ? hiredLines : ['None']),
+    '',
+    `Site Visits and events-${currentYear}-${currentYear + 1}:`,
+    ...(siteEventsLines.length ? siteEventsLines : ['None']),
   ]
     .join('\n')
     .trim();
