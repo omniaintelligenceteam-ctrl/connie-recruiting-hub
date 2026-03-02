@@ -57,6 +57,7 @@ export default function PipelineBoard() {
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768);
   const [pendingMove, setPendingMove] = useState<PendingMove | null>(null);
   const [lostReason, setLostReason] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -70,13 +71,28 @@ export default function PipelineBoard() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
+  const filteredCandidates = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return candidates;
+
+    return candidates.filter((candidate) => {
+      const fullName = `${candidate.first_name} ${candidate.last_name}`.toLowerCase();
+      return (
+        candidate.first_name.toLowerCase().includes(query) ||
+        candidate.last_name.toLowerCase().includes(query) ||
+        fullName.includes(query) ||
+        candidate.specialty.toLowerCase().includes(query)
+      );
+    });
+  }, [candidates, searchQuery]);
+
   const groupedCandidates = useMemo(
     () =>
       STAGES.reduce<Record<string, Candidate[]>>((acc, stage) => {
-        acc[stage] = candidates.filter((candidate) => candidate.stage === stage);
+        acc[stage] = filteredCandidates.filter((candidate) => candidate.stage === stage);
         return acc;
       }, {}),
-    [candidates],
+    [filteredCandidates],
   );
 
   const findStageForCandidate = (candidateId: string) => candidates.find((item) => item.id === candidateId)?.stage;
@@ -169,9 +185,32 @@ export default function PipelineBoard() {
     setLostReason('');
   };
 
+  const searchBar = (
+    <div className="relative">
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(event) => setSearchQuery(event.target.value)}
+        placeholder="Search doctors by name or specialty..."
+        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm text-slate-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+      />
+      {searchQuery ? (
+        <button
+          type="button"
+          onClick={() => setSearchQuery('')}
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-sm font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+          aria-label="Clear search"
+        >
+          ×
+        </button>
+      ) : null}
+    </div>
+  );
+
   if (isMobile) {
     return (
       <div className="space-y-4">
+        {searchBar}
         {STAGES.map((stage) => (
           <section key={stage} className="rounded-xl bg-slate-100/80 p-3">
             <div className="mb-2 flex items-center gap-2">
@@ -190,7 +229,9 @@ export default function PipelineBoard() {
                 />
               ))}
               {(groupedCandidates[stage] ?? []).length === 0 ? (
-                <p className="rounded-lg bg-white p-3 text-sm text-slate-500">No doctors in this stage yet.</p>
+                <p className="rounded-lg bg-white p-3 text-sm text-slate-500">
+                  {searchQuery ? 'No matches' : 'No doctors in this stage yet.'}
+                </p>
               ) : null}
             </div>
           </section>
@@ -201,6 +242,7 @@ export default function PipelineBoard() {
 
   return (
     <>
+      <div className="mb-3">{searchBar}</div>
       <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd} sensors={sensors}>
         <div className="overflow-x-auto pb-2 scroll-smooth [scrollbar-gutter:stable]">
           <SortableContext items={[...STAGES]} strategy={horizontalListSortingStrategy}>
