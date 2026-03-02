@@ -21,6 +21,9 @@ import CandidateTimeline from './CandidateTimeline';
 import LogInteraction from './LogInteraction';
 import QuickFollowUp from './QuickFollowUp';
 import VoiceNote from './VoiceNote';
+import NextStepCard from './NextStepCard';
+import { useInteractions } from '../../hooks/useInteractions';
+import { recommendNextStep } from '../../lib/nextStepEngine';
 
 type CandidateProfileProps = {
   candidateId: string;
@@ -49,6 +52,7 @@ export default function CandidateProfile({ candidateId }: CandidateProfileProps)
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
   const { getCandidateById, updateCandidate, deleteCandidate, loading } = useCandidates();
+  const { interactions, fetchInteractions } = useInteractions();
 
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [editMode, setEditMode] = useState(false);
@@ -65,6 +69,7 @@ export default function CandidateProfile({ candidateId }: CandidateProfileProps)
         const found = await getCandidateById(candidateId);
         setCandidate(found);
         setForm(found);
+        await fetchInteractions(candidateId);
       } catch {
         showToast('Could not load candidate profile.', 'error');
       }
@@ -144,6 +149,21 @@ export default function CandidateProfile({ candidateId }: CandidateProfileProps)
 
   return (
     <section className="space-y-6">
+      {candidate && (() => {
+        const rec = recommendNextStep(candidate, interactions, new Date());
+        return rec ? (
+          <NextStepCard
+            recommendation={rec}
+            onAction={(action) => {
+              if (action === 'interview_prep') {
+                navigate(`/candidates/${candidateId}/prep`);
+              } else if (action === 'send_outreach' || action === 'nurture_touch') {
+                navigate(`/email?candidateId=${candidateId}`);
+              }
+            }}
+          />
+        ) : null;
+      })()}
       <Link to="/pipeline" className="inline-flex min-h-11 items-center gap-2 text-base font-medium text-blue-700">
         <ArrowLeft size={18} /> Back to Pipeline
       </Link>
