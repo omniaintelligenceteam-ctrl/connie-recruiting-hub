@@ -78,13 +78,13 @@ export default function DailyDigest() {
     // We run the engine with empty interactions (lightweight — no DB call here)
     // so we can get rough counts. Production upgrade: fetch all interactions.
     const needsOutreach = candidates.filter((c) => {
-      if (c.stage !== 'Sourced' && c.stage !== 'Contacted') return false;
+      if (c.stage !== 'Sourced') return false;
       const rec = recommendNextStep(c, [], now);
       return rec?.action === 'send_outreach';
     });
 
     const needsCall = candidates.filter((c) => {
-      if (c.stage !== 'Contacted' && c.stage !== 'Responded') return false;
+      if (c.stage !== 'Phone Screen') return false;
       const rec = recommendNextStep(c, [], now);
       return rec?.action === 'schedule_followup_call';
     });
@@ -137,7 +137,7 @@ export default function DailyDigest() {
         count: needsCall.length,
         items: needsCall.map((c) => ({
           id: c.id,
-          label: `${fullName(c)} — no reply in 3+ days`,
+          label: `${fullName(c)} — follow-up call due`,
         })),
         urgent: needsCall.length > 0,
       },

@@ -9,24 +9,18 @@ export const SPECIALTIES = [
 
 export const STAGES = [
   'Sourced',
-  'Contacted',
-  'Responded',
   'Phone Screen',
   'Site Visit',
   'Offer',
-  'Negotiation',
   'Accepted',
   'Closed/Lost',
 ] as const;
 
 export const STAGE_COLORS: Record<string, string> = {
   Sourced: 'bg-gray-100 text-gray-700',
-  Contacted: 'bg-blue-100 text-blue-700',
-  Responded: 'bg-cyan-100 text-cyan-700',
   'Phone Screen': 'bg-yellow-100 text-yellow-700',
   'Site Visit': 'bg-orange-100 text-orange-700',
   Offer: 'bg-purple-100 text-purple-700',
-  Negotiation: 'bg-pink-100 text-pink-700',
   Accepted: 'bg-green-100 text-green-700',
   'Closed/Lost': 'bg-red-100 text-red-700',
 };

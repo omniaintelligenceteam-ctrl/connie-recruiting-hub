@@ -1,5 +1,6 @@
 import { differenceInCalendarDays, formatDistanceToNowStrict, parseISO } from 'date-fns';
-import { Mail, Star } from 'lucide-react';
+import { ChevronDown, Mail, Star } from 'lucide-react';
+import { useState } from 'react';
 import type { Candidate, Interaction } from '../../lib/database.types';
 import { SPECIALTY_COLORS } from '../../lib/constants';
 import Badge from '../shared/Badge';
@@ -8,11 +9,8 @@ import QuickFollowUp from '../candidates/QuickFollowUp';
 type CandidateCardProps = {
   candidate: Candidate;
   onClick: (candidate: Candidate) => void;
-  /** Optional recent interactions for badge computation */
   interactions?: Interaction[];
 };
-
-// ─── Urgency dot (existing behaviour, preserved) ──────────────────────────────
 
 function getUrgencyColor(nextStepDue: string | null) {
   if (!nextStepDue) return 'bg-green-500';
@@ -24,23 +22,16 @@ function getUrgencyColor(nextStepDue: string | null) {
   return 'bg-green-500';
 }
 
-// ─── Activity badges ──────────────────────────────────────────────────────────
-
 interface ActivityBadges {
-  /** 🔴 action overdue — 3+ days since any activity */
   overdue: boolean;
-  /** 🟡 follow-up due soon — activity within 1-2 days */
   dueSoon: boolean;
-  /** ⭐ hot — 3+ interactions in the last 7 days */
   hot: boolean;
-  /** ✉️ ready for outreach — Sourced/Contacted with no recent email */
   readyForOutreach: boolean;
 }
 
 function computeBadges(candidate: Candidate, interactions: Interaction[]): ActivityBadges {
   const now = new Date();
 
-  // Days since last interaction of any kind
   const sorted = [...interactions].sort((a, b) =>
     a.contact_date < b.contact_date ? 1 : -1,
   );
@@ -49,14 +40,12 @@ function computeBadges(candidate: Candidate, interactions: Interaction[]): Activ
     ? differenceInCalendarDays(now, parseISO(lastAny.contact_date))
     : differenceInCalendarDays(now, parseISO(candidate.stage_entered_at));
 
-  // Hot: 3+ interactions in last 7 days
   const recentCount = interactions.filter(
     (i) => differenceInCalendarDays(now, parseISO(i.contact_date)) <= 7,
   ).length;
 
-  // Ready for outreach
   const hasOutreach = interactions.some((i) => i.type === 'Email Sent');
-  const isEarlyStage = candidate.stage === 'Sourced' || candidate.stage === 'Contacted';
+  const isEarlyStage = candidate.stage === 'Sourced';
 
   return {
     overdue: daysSinceLast >= 3,
@@ -66,9 +55,9 @@ function computeBadges(candidate: Candidate, interactions: Interaction[]): Activ
   };
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export default function CandidateCard({ candidate, onClick, interactions = [] }: CandidateCardProps) {
+  const [expanded, setExpanded] = useState(false);
+
   const daysInStage = formatDistanceToNowStrict(parseISO(candidate.stage_entered_at), {
     unit: 'day',
     roundingMethod: 'floor',
@@ -80,80 +69,88 @@ export default function CandidateCard({ candidate, onClick, interactions = [] }:
     <div className="group relative">
       <button
         type="button"
-        onClick={() => onClick(candidate)}
+        onClick={() => setExpanded((prev) => !prev)}
         className="min-h-11 w-full rounded-xl border border-slate-200 bg-white p-2.5 pr-11 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        aria-expanded={expanded}
       >
-        {/* Name + urgency dot */}
-        <div className="mb-1.5 flex items-start justify-between gap-2">
+        <div className="flex items-start justify-between gap-2">
           <p className="text-sm font-bold text-slate-900">
             Dr. {candidate.first_name} {candidate.last_name}
           </p>
-          <span
-            className={`mt-1 h-3 w-3 shrink-0 rounded-full ${getUrgencyColor(candidate.next_step_due)}`}
-          />
+          <div className="mt-0.5 flex items-center gap-2">
+            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${getUrgencyColor(candidate.next_step_due)}`} />
+            <ChevronDown
+              size={14}
+              className={`text-slate-500 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+            />
+          </div>
         </div>
 
-        {/* Specialty badge */}
-        <div className="mb-1.5">
+        <div className="mt-1.5">
           <Badge
             label={candidate.specialty}
             colorClass={SPECIALTY_COLORS[candidate.specialty] ?? 'bg-slate-100 text-slate-700'}
           />
         </div>
 
-        {/* Stage duration */}
-        <p className="text-xs text-slate-600">In stage: {daysInStage}</p>
+        <div
+          className={`overflow-hidden transition-all duration-200 ${expanded ? 'max-h-72 opacity-100 mt-2' : 'max-h-0 opacity-0'}`}
+        >
+          <p className="text-xs text-slate-600">In stage: {daysInStage}</p>
 
-        {/* Next step */}
-        {candidate.next_step ? (
-          <p className="mt-1 text-xs text-slate-700">
-            <span className="font-medium">Next:</span> {candidate.next_step}
-          </p>
-        ) : null}
+          {candidate.next_step ? (
+            <p className="mt-1 text-xs text-slate-700">
+              <span className="font-medium">Next:</span> {candidate.next_step}
+            </p>
+          ) : null}
 
-        {/* Activity badges row */}
-        {(badges.overdue || badges.dueSoon || badges.hot || badges.readyForOutreach) && (
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            {badges.overdue && (
-              <span
-                title="Action overdue — 3+ days no activity"
-                className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700"
-              >
-                🔴 Overdue
-              </span>
-            )}
-            {!badges.overdue && badges.dueSoon && (
-              <span
-                title="Check-in due soon"
-                className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700"
-              >
-                🟡 Due Soon
-              </span>
-            )}
-            {badges.hot && (
-              <span
-                title="Hot candidate — multiple recent interactions"
-                className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700"
-              >
-                <Star size={10} className="fill-orange-500 text-orange-500" />
-                Hot
-              </span>
-            )}
-            {badges.readyForOutreach && (
-              <span
-                title="Ready for initial outreach"
-                className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700"
-              >
-                <Mail size={10} />
-                Outreach Ready
-              </span>
-            )}
-          </div>
-        )}
+          {candidate.notes ? (
+            <p className="mt-1 text-xs text-slate-600 line-clamp-3">
+              <span className="font-medium text-slate-700">Notes:</span> {candidate.notes}
+            </p>
+          ) : null}
+
+          {(badges.overdue || badges.dueSoon || badges.hot || badges.readyForOutreach) && (
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              {badges.overdue && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+                  🔴 Overdue
+                </span>
+              )}
+              {!badges.overdue && badges.dueSoon && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                  🟡 Due Soon
+                </span>
+              )}
+              {badges.hot && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
+                  <Star size={10} className="fill-orange-500 text-orange-500" />
+                  Hot
+                </span>
+              )}
+              {badges.readyForOutreach && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                  <Mail size={10} />
+                  Outreach Ready
+                </span>
+              )}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onClick(candidate);
+            }}
+            className="mt-2 text-xs font-medium text-blue-700 hover:underline"
+          >
+            View full profile
+          </button>
+        </div>
       </button>
 
-      {/* Quick follow-up button */}
-      <div className="absolute top-2 right-2">
+      <div className="absolute top-2 right-8">
         <QuickFollowUp candidate={candidate} variant="icon" />
       </div>
     </div>

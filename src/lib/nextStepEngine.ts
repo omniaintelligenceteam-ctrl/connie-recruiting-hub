@@ -77,36 +77,7 @@ export function recommendNextStep(
     }
   }
 
-  // ── Rule 2: Contacted, no reply after 3 days ──────────────────────────────
-  if (candidate.stage === 'Contacted') {
-    const lastEmail = lastOfType(interactions, ['Email Sent']);
-    const hasReply = lastOfType(interactions, ['Email Received', 'Phone Call']);
-    if (lastEmail && !hasReply) {
-      const sinceEmail = daysSince(lastEmail.contact_date, now);
-      if (sinceEmail >= 3) {
-        return {
-          action: 'schedule_followup_call',
-          priority: 'medium',
-          message: `No reply from Dr. ${candidate.last_name} in ${sinceEmail} day${sinceEmail === 1 ? '' : 's'} — try a call.`,
-          reason: 'Email sent 3+ days ago with no reply or inbound call logged.',
-          suggestedDate: now,
-        };
-      }
-    }
-    if (!lastEmail && stageAge >= 1) {
-      return {
-        action: 'send_outreach',
-        priority: 'high',
-        message: `Dr. ${candidate.last_name} is Contacted but no email is on record.`,
-        reason: 'Stage is Contacted but no Email Sent interaction found.',
-        oneClick: true,
-        template: 'initial_outreach',
-        suggestedDate: now,
-      };
-    }
-  }
-
-  // ── Rule 3: Phone Screen, no docs requested after 5 days ─────────────────
+  // ── Rule 2: Phone Screen, no docs requested after 5 days ─────────────────
   if (candidate.stage === 'Phone Screen') {
     const hasDocRequest = hasKeyword(interactions, 'cv', 'document', 'curriculum', 'resume');
     if (!hasDocRequest && stageAge >= 5) {
@@ -147,21 +118,21 @@ export function recommendNextStep(
     }
   }
 
-  // ── Rule 5: Offer / Negotiation, no feedback after 7 days ────────────────
-  if (candidate.stage === 'Offer' || candidate.stage === 'Negotiation') {
+  // ── Rule 4: Offer, no feedback after 7 days ───────────────────────────────
+  if (candidate.stage === 'Offer') {
     const hasClientFeedback = hasKeyword(interactions, 'client', 'feedback', 'counter', 'decision');
     if (!hasClientFeedback && stageAge >= 7) {
       return {
         action: 'nurture_touch',
         priority: 'medium',
         message: `No client feedback on Dr. ${candidate.last_name}'s offer — ${stageAge} days waiting.`,
-        reason: 'In Offer/Negotiation 7+ days with no feedback logged.',
+        reason: 'In Offer 7+ days with no feedback logged.',
         suggestedDate: now,
       };
     }
   }
 
-  // ── Rule 6: Accepted, 30-day check-in ────────────────────────────────────
+  // ── Rule 5: Accepted, 30-day check-in ────────────────────────────────────
   if (candidate.stage === 'Accepted') {
     const lastTouch = lastOfType(interactions, [
       'Phone Call',
@@ -181,19 +152,6 @@ export function recommendNextStep(
     }
   }
 
-  // ── Rule 7: Responded, no call scheduled ─────────────────────────────────
-  if (candidate.stage === 'Responded') {
-    const callLogged = lastOfType(interactions, ['Phone Call', 'Meeting']);
-    if (!callLogged && stageAge >= 2) {
-      return {
-        action: 'schedule_followup_call',
-        priority: 'medium',
-        message: `Dr. ${candidate.last_name} responded ${stageAge} day${stageAge === 1 ? '' : 's'} ago — schedule a call.`,
-        reason: 'Candidate responded but no call has been logged.',
-        suggestedDate: now,
-      };
-    }
-  }
 
   return null;
 }

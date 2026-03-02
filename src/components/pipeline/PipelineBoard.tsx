@@ -122,13 +122,6 @@ export default function PipelineBoard() {
       return;
     }
 
-    if (targetStage === 'Responded') {
-      showToast('Time for a formal interview. Would you like to generate an Interview Prep Sheet?', 'info', {
-        label: 'Generate Prep Sheet',
-        onClick: () => navigate(`/candidates/${candidate.id}/prep`),
-      });
-      return;
-    }
 
     if (targetStage === 'Site Visit') {
       showToast('Exciting! Ready to plan the site visit?', 'info', {

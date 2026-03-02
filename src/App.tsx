@@ -12,6 +12,7 @@ import InterviewPrepPage from './pages/InterviewPrepPage';
 import SiteVisitPage from './pages/SiteVisitPage';
 import SettingsPage from './pages/SettingsPage';
 import ReportsPage from './pages/ReportsPage';
+import FutureDoctorsPage from './pages/FutureDoctorsPage';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
             <Route path="ai" element={<AIAssistantPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="future-doctors" element={<FutureDoctorsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

@@ -3,7 +3,7 @@ export type Candidate = {
   first_name: string;
   last_name: string;
   specialty: string;
-  stage: 'Sourced' | 'Contacted' | 'Responded' | 'Phone Screen' | 'Site Visit' | 'Offer' | 'Negotiation' | 'Accepted' | 'Closed/Lost';
+  stage: 'Sourced' | 'Phone Screen' | 'Site Visit' | 'Offer' | 'Accepted' | 'Closed/Lost';
   email: string | null;
   phone: string | null;
   current_location: string | null;
@@ -89,3 +89,31 @@ export type InsertInteraction = Omit<Interaction, 'id' | 'created_at'>;
 
 export type InsertSiteVisit = Omit<SiteVisit, 'id' | 'created_at' | 'updated_at'>;
 export type UpdateSiteVisit = Partial<InsertSiteVisit>;
+
+export type FutureDoctor = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  specialty: string | null;
+  current_school: string | null;
+  current_program: string | null;
+  expected_start_year: number | null;
+  how_connected: 'Conference' | 'Referral' | 'Future Physicians Program' | 'Cold Outreach' | 'Other' | null;
+  notes: string | null;
+  next_checkin: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type InsertFutureDoctor = {
+  first_name: string;
+  last_name: string;
+  specialty?: string | null;
+  current_school?: string | null;
+  current_program?: string | null;
+  expected_start_year?: number | null;
+  how_connected?: 'Conference' | 'Referral' | 'Future Physicians Program' | 'Cold Outreach' | 'Other' | null;
+  notes?: string | null;
+  next_checkin?: string | null;
+};
+export type UpdateFutureDoctor = Partial<InsertFutureDoctor>;

@@ -31,7 +31,7 @@ export function useDashboardStats() {
         .from('candidates')
         .select('*')
         .or(
-          `next_step_due.lte.${todayIso},and(next_step_due.is.null,stage.in.(Contacted,Responded),stage_entered_at.lt.${fiveDaysAgoIso})`,
+          `next_step_due.lte.${todayIso},and(next_step_due.is.null,stage.in.(Sourced,Phone Screen),stage_entered_at.lt.${fiveDaysAgoIso})`,
         ),
       supabase
         .from('candidates')

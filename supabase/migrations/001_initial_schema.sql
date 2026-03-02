@@ -3,7 +3,7 @@ CREATE TABLE candidates (
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
   specialty TEXT NOT NULL,
-  stage TEXT NOT NULL DEFAULT 'Sourced' CHECK (stage IN ('Sourced', 'Contacted', 'Responded', 'Phone Screen', 'Site Visit', 'Offer', 'Negotiation', 'Accepted', 'Closed/Lost')),
+  stage TEXT NOT NULL DEFAULT 'Sourced' CHECK (stage IN ('Sourced', 'Phone Screen', 'Site Visit', 'Offer', 'Accepted', 'Closed/Lost')),
   email TEXT,
   phone TEXT,
   current_location TEXT,
