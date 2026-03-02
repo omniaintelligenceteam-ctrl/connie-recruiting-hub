@@ -16,6 +16,18 @@ export type Candidate = {
   stage_entered_at: string;
   created_at: string;
   updated_at: string;
+  cv_file_url: string | null;
+  is_visa_candidate: boolean;
+  visa_status: string | null;
+  visa_approval_date: string | null;
+  npdb_status: string | null;
+  npdb_report_date: string | null;
+  paperwork_sent_date: string | null;
+  paperwork_received_date: string | null;
+  questionnaire_sent_date: string | null;
+  questionnaire_received_date: string | null;
+  approved_by_immigration: boolean;
+  approved_for_site_visit: boolean;
 };
 
 export type Interaction = {
@@ -38,7 +50,6 @@ export type EmailDraft = {
   sent_at: string | null;
   created_at: string;
 };
-
 
 export type Report = {
   id: string;
@@ -82,7 +93,20 @@ export type SiteVisit = {
   updated_at: string;
 };
 
-export type InsertCandidate = Omit<Candidate, 'id' | 'created_at' | 'updated_at'>;
+export type InsertCandidate = Omit<Candidate, 'id' | 'created_at' | 'updated_at' | 'cv_file_url' | 'is_visa_candidate' | 'visa_status' | 'visa_approval_date' | 'npdb_status' | 'npdb_report_date' | 'paperwork_sent_date' | 'paperwork_received_date' | 'questionnaire_sent_date' | 'questionnaire_received_date' | 'approved_by_immigration' | 'approved_for_site_visit'> & {
+  cv_file_url?: string | null;
+  is_visa_candidate?: boolean;
+  visa_status?: string | null;
+  visa_approval_date?: string | null;
+  npdb_status?: string | null;
+  npdb_report_date?: string | null;
+  paperwork_sent_date?: string | null;
+  paperwork_received_date?: string | null;
+  questionnaire_sent_date?: string | null;
+  questionnaire_received_date?: string | null;
+  approved_by_immigration?: boolean;
+  approved_for_site_visit?: boolean;
+};
 export type UpdateCandidate = Partial<InsertCandidate>;
 
 export type InsertInteraction = Omit<Interaction, 'id' | 'created_at'>;
@@ -117,3 +141,17 @@ export type InsertFutureDoctor = {
   next_checkin?: string | null;
 };
 export type UpdateFutureDoctor = Partial<InsertFutureDoctor>;
+
+export type ThankYouLetter = {
+  id: string;
+  candidate_id: string;
+  recipient_name: string;
+  recipient_role: string;
+  sent_date: string;
+  letter_type: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type InsertThankYouLetter = Omit<ThankYouLetter, 'id' | 'created_at' | 'updated_at'>;
+export type UpdateThankYouLetter = Partial<InsertThankYouLetter>;
