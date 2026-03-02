@@ -11,6 +11,7 @@ import PipelinePage from './pages/PipelinePage';
 import InterviewPrepPage from './pages/InterviewPrepPage';
 import SiteVisitPage from './pages/SiteVisitPage';
 import SettingsPage from './pages/SettingsPage';
+import ReportsPage from './pages/ReportsPage';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
             <Route path="outreach" element={<OutreachPage />} />
             <Route path="ai" element={<AIAssistantPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="reports" element={<ReportsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

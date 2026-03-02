@@ -39,6 +39,15 @@ export type EmailDraft = {
   created_at: string;
 };
 
+
+export type Report = {
+  id: string;
+  title: string;
+  generated_at: string;
+  content: string;
+  report_type: string;
+};
+
 export interface ScheduleItem {
   id: string;
   time: string;
