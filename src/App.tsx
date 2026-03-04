@@ -13,6 +13,7 @@ import SiteVisitPage from './pages/SiteVisitPage';
 import SettingsPage from './pages/SettingsPage';
 import ReportsPage from './pages/ReportsPage';
 import FutureDoctorsPage from './pages/FutureDoctorsPage';
+import ScoutPage from './pages/ScoutPage';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
             <Route path="settings" element={<SettingsPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="future-doctors" element={<FutureDoctorsPage />} />
+            <Route path="scout" element={<ScoutPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

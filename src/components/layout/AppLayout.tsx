@@ -1,4 +1,4 @@
-import { Brain, LayoutDashboard, PlusCircle, Settings, Workflow } from 'lucide-react';
+import { Brain, LayoutDashboard, PlusCircle, Radar, Settings, Workflow } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 import AIFloatingButton from '../ai/AIFloatingButton';
 
@@ -68,6 +68,17 @@ export default function AppLayout() {
                 <Brain size={20} strokeWidth={1.5} />
                 <span>AI Assistant</span>
               </NavLink>
+              <NavLink
+                to="/scout"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                    isActive ? 'bg-white/15 text-white shadow-lg' : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                  }`
+                }
+              >
+                <Radar size={20} strokeWidth={1.5} />
+                <span>Scout</span>
+              </NavLink>
             </nav>
           </div>
           <div className="mt-auto p-6 border-t border-white/10">
@@ -109,6 +120,10 @@ export default function AppLayout() {
           <NavLink to="/ai" className={({ isActive }) => `flex flex-col items-center justify-center gap-1 flex-1 h-full text-[10px] font-medium transition-colors ${isActive ? 'text-blue-600' : 'text-slate-500'}`}>
             <Brain size={20} strokeWidth={1.5} />
             <span>AI</span>
+          </NavLink>
+          <NavLink to="/scout" className={({ isActive }) => `flex flex-col items-center justify-center gap-1 flex-1 h-full text-[10px] font-medium transition-colors ${isActive ? 'text-blue-600' : 'text-slate-500'}`}>
+            <Radar size={20} strokeWidth={1.5} />
+            <span>Scout</span>
           </NavLink>
           <NavLink to="/settings" className={({ isActive }) => `flex flex-col items-center justify-center gap-1 flex-1 h-full text-[10px] font-medium transition-colors ${isActive ? 'text-blue-600' : 'text-slate-500'}`}>
             <Settings size={20} strokeWidth={1.5} />
