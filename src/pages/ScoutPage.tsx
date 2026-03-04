@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Loader2, UserPlus, Radar, Phone, MapPin, Hash, Building2, AlertCircle, ChevronDown, Database, Briefcase } from 'lucide-react';
+import { Search, Loader2, UserPlus, Radar, Phone, MapPin, Hash, AlertCircle, ChevronDown, Database, Briefcase } from 'lucide-react';
 
 const US_STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
